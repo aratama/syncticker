@@ -89,14 +89,14 @@ render state = div [class_ root] [
     digit n shift = div [class_ Classes.digit] [
         
         div [
+            class_ (ClassName "number")
+        ] [text (show n)],
+
+        div [
             classes [triangle, up, buttonDisabled], 
             onClick (input_ (Adjust shift))
         ] [text "▲"],
-        
-        div [
-            class_ (ClassName "number")
-        ] [text (show n)],
-        
+
         div [
             classes [triangle, down, buttonDisabled], 
             onClick (input_ (Adjust (negate shift)))
