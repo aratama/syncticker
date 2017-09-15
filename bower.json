@@ -1,0 +1,26 @@
+{
+  "name": "syncticker",
+  "authors": [
+    "aratama <aratama@aratama.github.io>"
+  ],
+  "description": "",
+  "main": "",
+  "license": "UNLICENSED",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "purescript-console": "^3.0.0",
+    "purescript-affjax": "^4.0.0",
+    "purescript-halogen": "^2.3.0",
+    "purescript-foreign": "^4.0.1",
+    "purescript-format": "^3.0.0",
+    "purescript-firebase3": "aratama/purescript-firebase4",
+    "purescript-js-timers": "^3.0.0"
+  }
+}

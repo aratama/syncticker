@@ -1,0 +1,8 @@
+{
+    "timers": {
+        "example": {
+            "max": 123, 
+            "count": 123
+        }
+    }
+}
