@@ -1,19 +1,20 @@
 module SyncTicker.Render (render) where
 
 import Data.Int (toNumber)
+import Data.Maybe (Maybe(..))
 import Data.Ord (abs, (<), (<=))
-import Data.Unit (Unit)
+import Data.Unit (Unit, unit)
 import Data.Void (Void)
 import Halogen.HTML (ClassName(ClassName), HTML, IProp, PropName(PropName), h1_, h2_, i, input, p_, span, text)
 import Halogen.HTML.Core (prop)
 import Halogen.HTML.Elements (button, div)
-import Halogen.HTML.Events (input_, onClick)
+import Halogen.HTML.Events (input_, onClick, onInput, onValueInput)
 import Halogen.HTML.Properties (class_, classes, value)
 import Prelude (div) as Prelude
 import Prelude (max, min, mod, negate, not, show, (&&), (*), (/), (<>), (==), (||))
 import SyncTicker.Classes (digit) as Classes
 import SyncTicker.Classes (display, colon, controls, progress, triangle, up, down, bar, root, over, empty, disabled, help, close, hidden, dialog, timerIDClass)
-import SyncTicker.Type (State, Query(..))
+import SyncTicker.Type (Query(..), State)
 import Text.Format (format, precision)
 import Unsafe.Coerce (unsafeCoerce)
 
@@ -105,11 +106,22 @@ render state = div [class_ root] [
             p_ [text "双方に同じタイマーIDを入力してください。"],
             div [class_ timerIDClass] [
                 span [] [text "タイマーID"],
-                input [value state.timerID] 
+                input [
+                    value state.timerID, 
+                    onValueInput \value -> Just (UpdateTimerID value unit)
+                ] 
             ],
-            button [class_ close, onClick (input_ CloseHelp)] [text "既存のタイマーに接続する"]
+            button [class_ close, onClick (input_ CloseHelp)] [text case state.serverState of 
+                Nothing -> "新たなタイマーを作成する"
+                Just _ -> "既存のタイマーに接続する"
+            ]
         ]
     ]
+
+
+
+
+
 
 
 
