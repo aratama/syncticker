@@ -1,10 +1,12 @@
 module SyncTicker.Type where
 
 import Control.Monad.Eff.Console (CONSOLE)
+import Control.Monad.Eff.Now (NOW)
 import Control.Monad.Eff.Timer (IntervalId, TIMER)
 import DOM (DOM)
 import DOM.HTML.Types (HISTORY)
 import DOM.HTML.Window (history)
+import Data.DateTime.Instant (Instant)
 import Data.Maybe (Maybe)
 import Data.Void (Void)
 import Halogen.Aff.Effects (HalogenEffects)
@@ -19,7 +21,7 @@ type State = {
 
     max :: Int, 
     count :: Int,
-    active :: Boolean, 
+    active :: Maybe { start :: Instant, count :: Int },
 
     timerID :: TimerID,
     interval :: Maybe IntervalId, 
@@ -51,7 +53,10 @@ type Effects eff = HalogenEffects (
     firebase :: FIREBASE, 
     console :: CONSOLE,
     dom :: DOM, 
-    history :: HISTORY | eff)
+    history :: HISTORY, 
+    now :: NOW | eff)
+
+
 
 
 

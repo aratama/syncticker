@@ -4,6 +4,7 @@ import Control.Applicative (pure, void, when)
 import Control.Bind (bind, discard)
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log)
+import Control.Monad.Eff.Now (now)
 import Control.Monad.State (put)
 import Control.Monad.State.Class (get)
 import DOM.HTML (window)
@@ -11,17 +12,20 @@ import DOM.HTML.History (DocumentTitle(..), URL(..), pushState)
 import DOM.HTML.Location (origin, pathname, search)
 import DOM.HTML.Window (history, location)
 import Data.Array (index)
+import Data.DateTime.Instant (unInstant)
 import Data.Either (Either(..))
 import Data.Foreign (toForeign, unsafeFromForeign)
+import Data.Int (floor)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.NaturalTransformation (type (~>))
 import Data.String (Pattern(..), split)
 import Data.String.Regex (match, regex)
 import Data.String.Regex.Flags (noFlags)
+import Data.Time.Duration (Milliseconds(..))
 import Halogen (Component, liftEff)
 import Halogen.Component (ComponentDSL, component)
 import Halogen.HTML.Core (HTML)
-import Prelude (max, min, negate, otherwise, unit, ($), (+), (-), (<>), (==))
+import Prelude (div, max, min, negate, otherwise, unit, ($), (+), (-), (/=), (<>), (==))
 import SyncTicker.Client (setValue, subscribeValue, unsubscribeValue)
 import SyncTicker.Render (render)
 import SyncTicker.Server (ServerState)
@@ -79,11 +83,12 @@ eval = case _ of
                     serverState = serverState
                 }
             Just value -> do 
+                time <- liftEff now
                 put state { 
                     serverState = serverState,
                     count = value.count, 
                     max = value.max, 
-                    active = value.active
+                    active = if value.active then Just { start: time, count: value.count } else Nothing
                 }
 
         pure next
@@ -95,21 +100,21 @@ eval = case _ of
         state <- get
         put state { 
             count = max (negate 5999) (min 5999 (state.max)), 
-            active = false 
+            active = Nothing 
         }
         updateServerValue
         pure next
 
     Play next -> do
         state <- get
-        let value = state { active = true }
-        put value
+        time <- liftEff now
+        put state { active = Just { start: time, count: state.count } }
         updateServerValue
         pure next 
 
     Pause next -> do
         state <- get
-        put state { active = false }
+        put state { active = Nothing }
         updateServerValue
         pure next 
 
@@ -122,21 +127,25 @@ eval = case _ of
 
     Tick next -> do
         state <- get
-        when state.active do
-            put state { 
-                count = max (negate 5999) (min 5999 (state.count - 1)) 
-            }
+        case state.active of 
+            Just { start, count } -> do
+                time <- liftEff now
+                let Milliseconds delta = unInstant time - unInstant start
+                let count' = max (negate 5999) (min 5999 (count - div (floor delta) 1000))
+                when (state.count /= count') do
+                    put state { count = count' }
+            Nothing -> pure unit 
         pure next
 
     Adjust delta next -> do
         state <- get
         case state.active of 
-            true -> do 
+            Just time -> do 
                 let count = max 0 (min state.max (state.count + delta))
                 put state { count = count }
                 updateServerValue
 
-            false | state.count == state.max -> do 
+            Nothing | state.count == state.max -> do 
 
                     let count = max 0 (min 5999 (state.max + delta))
                     put $ state { 
@@ -160,7 +169,7 @@ eval = case _ of
             Just firebase -> setValue state.timerID {
                 max: state.max, 
                 count: state.count, 
-                active: state.active
+                active: isJust state.active
             } firebase 
 
         pure next 
@@ -204,11 +213,12 @@ eval = case _ of
         state <- get     
         liftEff case state.firebase of 
             Nothing -> pure unit 
-            Just firebase -> setValue state.timerID {
-                max: state.max, 
-                count: state.count, 
-                active: state.active
-            } firebase 
+            Just firebase -> do 
+                setValue state.timerID {
+                    max: state.max, 
+                    count: state.count, 
+                    active: isJust state.active 
+                } firebase 
 
 
 ui :: forall eff. Component HTML Query Input Output (Aff (Effects eff))
@@ -218,12 +228,24 @@ ui = component {
     initialState: \_ -> { 
         serverState: Nothing,
         timerID: "example", 
+
         max: 0, 
         count: 0, 
+        active: Nothing,
+
         interval: Nothing,
-        active: false, 
+
+
         help: true, 
         firebase: Nothing
     },
     receiver: \_ -> Nothing
 }
+
+
+
+
+
+
+
+

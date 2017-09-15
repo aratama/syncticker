@@ -33,17 +33,24 @@ render state = div [class_ root] [
         
         button [ 
             onClick (input_ Backward), 
-            class_ if state.active || state.count == state.max then disabled else empty 
+            class_ case state.active of 
+                Just _ -> disabled 
+                Nothing | state.count == state.max -> disabled 
+                _ -> empty 
         ] [icon "fast-backward"],
         
         button [
             onClick (input_ Play), 
-            class_ if state.active then disabled else empty
+            class_ case state.active of 
+                Just _ -> disabled 
+                Nothing -> empty
         ] [icon "play"],
         
         button [
             onClick (input_ Pause), 
-            class_ if state.active then empty else disabled
+            class_ case state.active of 
+                Just _ -> empty 
+                Nothing -> disabled
         ] [icon "pause"],
         
         button [
@@ -62,6 +69,7 @@ render state = div [class_ root] [
     renderHelp
 ]
   where 
+
     style :: forall r i. String -> IProp (style :: String | r) i
     style str = unsafeCoerce (prop (PropName "style") str)
 
@@ -96,7 +104,9 @@ render state = div [class_ root] [
     
     ] 
       where 
-        buttonDisabled = if not state.active && state.count == state.max then empty else disabled
+        buttonDisabled = case state.active of 
+            Nothing | state.count == state.max -> empty 
+            _ -> disabled
 
     renderHelp = div [classes [help, if state.help then empty else hidden]] [
         div [class_ dialog] [

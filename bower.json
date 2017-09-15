@@ -21,6 +21,7 @@
     "purescript-foreign": "^4.0.1",
     "purescript-format": "^3.0.0",
     "purescript-firebase3": "aratama/purescript-firebase4",
-    "purescript-js-timers": "^3.0.0"
+    "purescript-js-timers": "^3.0.0",
+    "purescript-now": "^3.0.0"
   }
 }
