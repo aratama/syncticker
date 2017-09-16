@@ -1,7 +1,7 @@
 module SyncTicker.UI (ui) where
 
-import Control.Applicative (pure, void, when)
-import Control.Bind (bind, discard)
+import Control.Applicative (pure, when)
+import Control.Bind (bind, discard, (>>=))
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff.Console (log)
 import Control.Monad.Eff.Now (now)
@@ -9,18 +9,14 @@ import Control.Monad.State (put)
 import Control.Monad.State.Class (get)
 import DOM.HTML (window)
 import DOM.HTML.History (DocumentTitle(..), URL(..), pushState)
-import DOM.HTML.Location (origin, pathname, search)
-import DOM.HTML.Window (history, location)
-import Data.Array (index)
+import DOM.HTML.Location (origin, pathname)
+import DOM.HTML.Window (history, localStorage, location)
+import DOM.WebStorage.Storage (setItem)
 import Data.DateTime.Instant (unInstant)
-import Data.Either (Either(..))
-import Data.Foreign (toForeign, unsafeFromForeign)
+import Data.Foreign (toForeign)
 import Data.Int (floor)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.NaturalTransformation (type (~>))
-import Data.String (Pattern(..), split)
-import Data.String.Regex (match, regex)
-import Data.String.Regex.Flags (noFlags)
 import Data.Time.Duration (Milliseconds(..))
 import Halogen (Component, liftEff)
 import Halogen.Component (ComponentDSL, component)
@@ -28,35 +24,14 @@ import Halogen.HTML.Core (HTML)
 import Prelude (div, max, min, negate, otherwise, unit, ($), (+), (-), (/=), (<>), (==))
 import SyncTicker.Client (setValue, subscribeValue, unsubscribeValue)
 import SyncTicker.Render (render)
-import SyncTicker.Server (ServerState)
 import SyncTicker.Type (Effects, Input, Output, Query(..), State)
 import Web.Firebase4 (initializeApp)
-import Web.Firebase4.Database.Snapshot (val)
 import Web.Firebase4.Type (Options(Options))
 
 eval :: forall eff. Query ~> ComponentDSL State Query Output (Aff (Effects eff))
 eval = case _ of
 
     Initialize next -> do 
-
-    
-        s <- liftEff do  
-            w <- window
-            h <- history w
-            l <- location w
-            search l 
-
-        case regex "^\\?id=([a-zA-Z0-9]*?)$" noFlags of 
-            Left err -> liftEff do 
-                log "regex error"
-            Right pattern -> fromMaybe (pure unit) do 
-                m <- match pattern s 
-                timerIDMaybe <- index m 1
-                timerID <- timerIDMaybe
-                Just do 
-                    st <- get
-                    put st { timerID = timerID } 
-                    liftEff (log ("Initial Timer ID: " <> timerID))
 
         state <- get 
 
@@ -211,23 +186,27 @@ eval = case _ of
 
     updateServerValue = do 
         state <- get     
-        liftEff case state.firebase of 
-            Nothing -> pure unit 
-            Just firebase -> do 
-                setValue state.timerID {
-                    max: state.max, 
-                    count: state.count, 
-                    active: isJust state.active 
-                } firebase 
+        liftEff do 
+            
+            case state.firebase of 
+                Nothing -> pure unit 
+                Just firebase -> do 
+                    setValue state.timerID {
+                        max: state.max, 
+                        count: state.count, 
+                        active: isJust state.active 
+                    } firebase 
+
+            window >>= localStorage >>= setItem "syncticker/timerID" state.timerID
 
 
 ui :: forall eff. Component HTML Query Input Output (Aff (Effects eff))
 ui = component {
     render,
     eval,
-    initialState: \_ -> { 
+    initialState: \timerID -> { 
         serverState: Nothing,
-        timerID: "example", 
+        timerID: fromMaybe "example" timerID, 
 
         max: 120, 
         count: 120, 
@@ -241,6 +220,9 @@ ui = component {
     },
     receiver: \_ -> Nothing
 }
+
+
+
 
 
 

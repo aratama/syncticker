@@ -43,7 +43,7 @@ data Query a
     | UpdateTimerID String a
      
 
-type Input = String
+type Input = Maybe String
 
 type Output = Void
 
