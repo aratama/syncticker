@@ -56,3 +56,6 @@ dialog = ClassName "dialog"
 
 timerIDClass :: ClassName
 timerIDClass = ClassName "timerID"
+
+usage :: ClassName
+usage = ClassName "usage"

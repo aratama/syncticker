@@ -5,7 +5,7 @@ import Data.Maybe (Maybe(..))
 import Data.Ord (abs, (<), (<=))
 import Data.Unit (Unit, unit)
 import Data.Void (Void)
-import Halogen.HTML (ClassName(ClassName), HTML, IProp, PropName(PropName), h1_, h2_, i, input, p_, span, text)
+import Halogen.HTML (ClassName(ClassName), HTML, IProp, PropName(PropName), h1_, h2_, h3_, i, input, p_, span, text)
 import Halogen.HTML.Core (prop)
 import Halogen.HTML.Elements (button, div)
 import Halogen.HTML.Events (input_, onClick, onInput, onValueInput)
@@ -13,7 +13,7 @@ import Halogen.HTML.Properties (class_, classes, value)
 import Prelude (div) as Prelude
 import Prelude (max, min, mod, negate, not, show, (&&), (*), (/), (<>), (==), (||))
 import SyncTicker.Classes (digit) as Classes
-import SyncTicker.Classes (display, colon, controls, progress, triangle, up, down, bar, root, over, empty, disabled, help, close, hidden, dialog, timerIDClass)
+import SyncTicker.Classes (display, colon, controls, progress, triangle, up, down, bar, root, over, empty, disabled, help, close, hidden, dialog, timerIDClass, usage)
 import SyncTicker.Type (Query(..), State)
 import Text.Format (format, precision)
 import Unsafe.Coerce (unsafeCoerce)
@@ -112,8 +112,19 @@ render state = div [class_ root] [
         div [class_ dialog] [
             h1_ [text "Sync Ticker"], 
             h2_ [text "遠隔操作可能スピーチタイマー"], 
-            p_ [text "他のデバイスとタイマーを共有するには、"],
-            p_ [text "双方に同じタイマーIDを入力してください。"],
+
+            div [class_ usage] [
+                h3_ [text "使いかた："],
+                p_ [
+                    text """他のデバイスとタイマーを共有するには、
+双方に同じタイマーIDを入力してください。
+計測する時間を設定するには、""",
+                    icon "fast-backward",
+                    text """ボタンでカウントをリセットしてから
+数字の上をクリックしてください。"""
+                ]
+            ],
+
             div [class_ timerIDClass] [
                 span [] [text "タイマーID"],
                 input [
@@ -122,11 +133,12 @@ render state = div [class_ root] [
                 ] 
             ],
             button [class_ close, onClick (input_ CloseHelp)] [text case state.serverState of 
-                Nothing -> "新たなタイマーを作成する"
-                Just _ -> "既存のタイマーに接続する"
+                Nothing -> "このタイマーを新規作成する"
+                Just _ -> "このタイマーに接続する"
             ]
         ]
     ]
+
 
 
 

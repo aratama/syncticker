@@ -1,0 +1,24 @@
+{
+    "rules": {
+        ".read": "false",
+        ".write": "false",
+        "timers": {            
+            "$timerID": {
+                ".read": "true",
+                ".write": "true",
+                "max": {
+                    ".validate": "newData.isNumber() && 0 <= newData.val()"
+                },
+                "count": {
+                    ".validate": "newData.isNumber()"
+                },
+                "active": {
+                    ".validate": "newData.isBoolean()"
+                },
+                "$other": {
+                    ".validate": false
+                }
+            }
+        }
+    }
+}

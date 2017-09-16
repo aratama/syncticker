@@ -229,8 +229,8 @@ ui = component {
         serverState: Nothing,
         timerID: "example", 
 
-        max: 0, 
-        count: 0, 
+        max: 120, 
+        count: 120, 
         active: Nothing,
 
         interval: Nothing,
