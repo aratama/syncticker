@@ -6,6 +6,7 @@
             "$timerID": {
                 ".read": "true",
                 ".write": "true",
+                ".validate": "newData.hasChildren(['max', 'count'])",
                 "max": {
                     ".validate": "newData.isNumber() && 0 <= newData.val()"
                 },

@@ -12,11 +12,12 @@ import DOM.HTML.History (DocumentTitle(..), URL(..), pushState)
 import DOM.HTML.Location (origin, pathname)
 import DOM.HTML.Window (history, localStorage, location)
 import DOM.WebStorage.Storage (setItem)
-import Data.DateTime.Instant (unInstant)
-import Data.Foreign (toForeign)
-import Data.Int (floor)
+import Data.DateTime.Instant (Instant, instant, unInstant)
+import Data.Foreign (toForeign, unsafeFromForeign)
+import Data.Int (floor, toNumber)
 import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.NaturalTransformation (type (~>))
+import Data.Nullable (toMaybe, toNullable)
 import Data.Time.Duration (Milliseconds(..))
 import Halogen (Component, liftEff)
 import Halogen.Component (ComponentDSL, component)
@@ -26,6 +27,7 @@ import SyncTicker.Client (setValue, subscribeValue, unsubscribeValue)
 import SyncTicker.Render (render)
 import SyncTicker.Type (Effects, Input, Output, Query(..), State)
 import Web.Firebase4 (initializeApp)
+import Web.Firebase4.Database.ServerValue (timestamp)
 import Web.Firebase4.Type (Options(Options))
 
 eval :: forall eff. Query ~> ComponentDSL State Query Output (Aff (Effects eff))
@@ -63,7 +65,10 @@ eval = case _ of
                     serverState = serverState,
                     count = value.count, 
                     max = value.max, 
-                    active = if value.active then Just { start: time, count: value.count } else Nothing
+                    active = if value.active then Just { 
+                            start: time, 
+                            count: value.count 
+                        } else Nothing
                 }
 
         pure next
@@ -137,16 +142,6 @@ eval = case _ of
         put state { 
             help = false 
         }
-        
-        -- create new timer
-        liftEff case state.firebase of 
-            Nothing -> pure unit 
-            Just firebase -> setValue state.timerID {
-                max: state.max, 
-                count: state.count, 
-                active: isJust state.active
-            } firebase 
-
         pure next 
 
     UpdateTimerID timerID next -> do
@@ -194,7 +189,7 @@ eval = case _ of
                     setValue state.timerID {
                         max: state.max, 
                         count: state.count, 
-                        active: isJust state.active 
+                        active: isJust state.active
                     } firebase 
 
             window >>= localStorage >>= setItem "syncticker/timerID" state.timerID
@@ -220,6 +215,13 @@ ui = component {
     },
     receiver: \_ -> Nothing
 }
+
+
+
+
+
+
+
 
 
 

@@ -52,7 +52,7 @@ main = do
 
         io.query (action Initialize)
 
-        _ <- liftEff $ setInterval 200 $ runHalogenAff do
+        _ <- liftEff $ setInterval 100 $ runHalogenAff do
             io.query (action Tick)
 
         pure unit
